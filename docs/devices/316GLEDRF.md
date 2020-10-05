@@ -1,6 +1,6 @@
 ---
 title: "ELKO 316GLEDRF control via MQTT"
-description: "Integrate your ELKO 316GLEDRF via Zigbee2mqtt with whatever smart home
+description: "Integrate your ELKO 316GLEDRF via Zigbee2MQTT with whatever smart home
  infrastructure you are using without the vendors bridge or gateway."
 ---
 
@@ -41,6 +41,7 @@ light:
     brightness: true
     schema: "json"
     command_topic: "zigbee2mqtt/<FRIENDLY_NAME>/set"
+    brightness_scale: 254
 
 sensor:
   - platform: "mqtt"

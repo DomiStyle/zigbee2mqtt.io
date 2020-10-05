@@ -1,6 +1,6 @@
 ---
 title: "Gledopto GD-CZ-006 control via MQTT"
-description: "Integrate your Gledopto GD-CZ-006 via Zigbee2mqtt with whatever smart home
+description: "Integrate your Gledopto GD-CZ-006 via Zigbee2MQTT with whatever smart home
  infrastructure you are using without the vendors bridge or gateway."
 ---
 
@@ -48,6 +48,7 @@ light:
     brightness: true
     schema: "json"
     command_topic: "zigbee2mqtt/<FRIENDLY_NAME>/set"
+    brightness_scale: 254
 
 sensor:
   - platform: "mqtt"

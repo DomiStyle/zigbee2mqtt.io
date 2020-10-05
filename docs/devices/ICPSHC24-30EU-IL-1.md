@@ -1,6 +1,6 @@
 ---
 title: "IKEA ICPSHC24-30EU-IL-1 control via MQTT"
-description: "Integrate your IKEA ICPSHC24-30EU-IL-1 via Zigbee2mqtt with whatever smart home
+description: "Integrate your IKEA ICPSHC24-30EU-IL-1 via Zigbee2MQTT with whatever smart home
  infrastructure you are using without the vendors bridge or gateway."
 ---
 
@@ -49,6 +49,7 @@ light:
     brightness: true
     schema: "json"
     command_topic: "zigbee2mqtt/<FRIENDLY_NAME>/set"
+    brightness_scale: 254
 
 sensor:
   - platform: "mqtt"

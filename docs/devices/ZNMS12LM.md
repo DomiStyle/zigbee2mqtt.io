@@ -1,6 +1,6 @@
 ---
 title: "Xiaomi ZNMS12LM control via MQTT"
-description: "Integrate your Xiaomi ZNMS12LM via Zigbee2mqtt with whatever smart home
+description: "Integrate your Xiaomi ZNMS12LM via Zigbee2MQTT with whatever smart home
  infrastructure you are using without the vendors bridge or gateway."
 ---
 
@@ -50,6 +50,14 @@ binary_sensor:
     payload_off: "LOCK"
     value_template: "{{ value_json.reverse}}"
     device_class: "lock"
+
+sensor:
+  - platform: "mqtt"
+    state_topic: "zigbee2mqtt/<FRIENDLY_NAME>"
+    availability_topic: "zigbee2mqtt/bridge/state"
+    unit_of_measurement: "%"
+    device_class: "battery"
+    value_template: "{{ value_json.battery }}"
 
 sensor:
   - platform: "mqtt"

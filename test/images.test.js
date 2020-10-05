@@ -16,13 +16,25 @@ describe('Device images', () => {
             return image;
         });
 
+        for (const device of devices) {
+            if (device.whiteLabel) {
+                for (const whiteLabel of device.whiteLabel) {
+                    let image = whiteLabel.model;
+                    replaceByDash.forEach((r) => image = image.replace(r, '-'));
+                    image = `${image}.jpg`;
+                    pictures.push(image);
+                }
+            }
+        }
+
         for (const file of fs.readdirSync(imageBase)) {
             if (['.DS_Store'].includes(file)) {
                 continue;
             }
 
             if (!pictures.includes(file)) {
-                chai.assert.fail(`${file} in images directory but is not supported`);
+                // Don't throw errors as it makes PR to add docs for to be supported devices fail.
+                console.log(`${file} in images directory but is not supported`);
             }
         }
     });
@@ -30,13 +42,28 @@ describe('Device images', () => {
     it('All devices should have an image in jpg format', () => {
         const missing = [];
 
-        devices.forEach((d) => {
-            let image = d.model;
+        const hasImage = (model) => {
+            let image = model;
             replaceByDash.forEach((r) => image = image.replace(r, '-'));
             image = `${image}.jpg`;
+            const imagePath = path.join(imageBase, image);
 
-            if (!fs.existsSync(path.join(imageBase, image))) {
-                missing.push(image);
+            return {exists: fs.existsSync(imagePath), path: image};
+        };
+
+        devices.forEach((d) => {
+            let result = hasImage(d.model);
+            if (!result.exists) {
+                missing.push(result.path);
+            }
+
+            if (d.whiteLabel) {
+                for (const whiteLabel of d.whiteLabel) {
+                    result = hasImage(whiteLabel.model);
+                    if (!result.exists) {
+                        missing.push(result.path);
+                    }
+                }
             }
         });
 
@@ -59,5 +86,22 @@ describe('Device images', () => {
         });
 
         chai.assert.strictEqual(invalid.length, 0, `Invalid device image dimensions: ${invalid.join(', ')}`);
+    });
+
+    it('All device images should be .jpg', () => {
+        const invalid = [];
+
+        fs.readdirSync(imageBase).forEach((file) => {
+            if (['.DS_Store'].includes(path.basename(file))) {
+                return;
+            }
+
+            if (!file.toLowerCase().endsWith('.jpg')) {
+                invalid.push(file);
+                return;
+            }
+        });
+
+        chai.assert.strictEqual(invalid.length, 0, `Device image not .jpg: ${invalid.join(', ')}`);
     });
 });

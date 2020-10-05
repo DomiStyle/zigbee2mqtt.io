@@ -1,6 +1,6 @@
 ---
 title: "Xiaomi GZCGQ01LM control via MQTT"
-description: "Integrate your Xiaomi GZCGQ01LM via Zigbee2mqtt with whatever smart home
+description: "Integrate your Xiaomi GZCGQ01LM via Zigbee2MQTT with whatever smart home
  infrastructure you are using without the vendors bridge or gateway."
 ---
 
@@ -22,7 +22,7 @@ description: "Integrate your Xiaomi GZCGQ01LM via Zigbee2mqtt with whatever smar
 *[How to use device type specific configuration](../information/configuration.md)*
 
 
-* `illuminance_calibration`: Allows to manually calibrate illuminance values,
+* `illuminance_lux_calibration`: Allows to manually calibrate illuminance values,
 e.g. `95` would take 95% to the illuminance reported by the device; default `100`.
 
 

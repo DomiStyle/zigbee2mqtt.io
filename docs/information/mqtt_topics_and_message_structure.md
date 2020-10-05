@@ -2,18 +2,18 @@
 ---
 # MQTT topics and message structure
 
-This page describes which MQTT topics are used by Zigbee2mqtt. Note that the base topic (by default `zigbee2mqtt`) is configurable in the [Zigbee2mqtt `configuration.yaml`](../information/configuration.md).
+This page describes which MQTT topics are used by Zigbee2MQTT. Note that the base topic (by default `zigbee2mqtt`) is configurable in the [Zigbee2MQTT `configuration.yaml`](../information/configuration.md).
 
 ## zigbee2mqtt/bridge/state
-zigbee2mqtt publishes the bridge state to this topic. Possible message are:
+Zigbee2MQTT publishes the bridge state to this topic. Possible message are:
 * `"online"`: published when the bridge is running (on startup)
 * `"offline"`: published right before the bridge stops
 
 ## zigbee2mqtt/bridge/config
-zigbee2mqtt publishes it configuration to this topic containing the `log_level` and `permit_join`.
+Zigbee2MQTT publishes it configuration to this topic containing the `log_level` and `permit_join`.
 
 ## zigbee2mqtt/bridge/log
-zigbee2mqtt will output log to this endpoint. Message are always in the form of `{"type":"TYPE","message":"MESSAGE"}`. Possible message types are:
+Zigbee2MQTT will output log to this endpoint. Message are always in the form of `{"type":"TYPE","message":"MESSAGE"}`. Possible message types are:
 * `"pairing"`: logged when device is connecting to the network.
 * `"device_connected"`: sent when a new device connects to the network.
 * `"device_ban"`: sent when a device is banned from the network.
@@ -87,18 +87,18 @@ Allows you to remove devices from the network. Payload should be the `friendly_n
 Note that in Zigbee the coordinator can only **request** a device to remove itself from the network.
 Which means that in case a device refuses to respond to this request it is not removed from the network.
 This can happen for e.g. battery powered devices which are sleeping and thus not receiving this request.
-In this case you will see the following in the zigbee2mqtt log:
+In this case you will see the following in the Zigbee2MQTT log:
 
 ```
-zigbee2mqtt:info  2019-11-03T13:39:30: Removing 'dimmer'
-zigbee2mqtt:error 2019-11-03T13:39:40: Failed to remove dimmer (Error: AREQ - ZDO - mgmtLeaveRsp after 10000ms)
+Zigbee2MQTT:info  2019-11-03T13:39:30: Removing 'dimmer'
+Zigbee2MQTT:error 2019-11-03T13:39:40: Failed to remove dimmer (Error: AREQ - ZDO - mgmtLeaveRsp after 10000ms)
 ```
 
 An alternative way to remove the device is by factory resetting it, this probably won't work for all devices as it depends on the device itself.
 In case the device did remove itself from the network, you will see:
 
 ```
-zigbee2mqtt:warn  2019-11-03T13:36:18: Device '0x00158d00024a5e57' left the network
+Zigbee2MQTT:warn  2019-11-03T13:36:18: Device '0x00158d00024a5e57' left the network
 ```
 
 In case all of the above fails, you can force remove a device. Note that a force remove will **only** remove the device from the database. Until this device is factory reset, it will still hold the network encryption key and thus is still able to communicate over the network!
@@ -125,22 +125,25 @@ In case you also want to specify the group ID, provide the following payload `{"
 
 ## zigbee2mqtt/bridge/config/remove_group
 Allows you to remove a group, payload should be the name of the group, e.g. `my_group`.
+In case group removal fails because on of the devices cannot be removed from the group you can force it via `zigbee2mqtt/bridge/config/remove_group`.
 
 ## zigbee2mqtt/bridge/networkmap
 **WARNING: During the networkmap scan your network will be not/less responsive. Depending on the size of your network this can take somewhere between 10 seconds and 2 minutes. Therefore it is recommended to only trigger these scans manually!**
 
-Allows you to retrieve a map of your zigbee network. Possible payloads are `raw` and `graphviz`. Zigbee2mqtt will send the networkmap to topic `zigbee2mqtt/bridge/networkmap/[graphviz OR raw]`. <br /> Use [webgraphviz.com](http://www.webgraphviz.com/) or other Tools to generate Network Graph. <br /> **NOTE:** zigbee2mqtt 1.2.1+ required.
+Allows you to retrieve a map of your zigbee network. Possible payloads are `raw`, `graphviz`, and `plantuml`. Zigbee2MQTT will send the networkmap to topic `zigbee2mqtt/bridge/networkmap/[raw|graphviz|plantuml]`. <br /> Use [webgraphviz.com](http://www.webgraphviz.com/) (for `graphviz`), [planttext.com](https://www.planttext.com/) (for `plantuml`), or other tools to generate the Network Graph. <br /> **NOTE:** Zigbee2MQTT 1.2.1+ required.
+
+To request a networkmap with **routes** use `zigbee2mqtt/bridge/networkmap/routes` as topic.
+
+### graphviz
 
 The graphviz map shows the devices as follows:
-* Coordinator :  rectangle with bold outline
-* Router : rectangle with rounded corners
-* End device : rectangle with rounded corners and dashed outline
+* **Coordinator:** rectangle with bold outline
+* **Router:** rectangle with rounded corners
+* **End device:** rectangle with rounded corners and dashed outline
 
 Links are labelled with link quality (0..255) and active routes (listed by short 16 bit destination address). Arrow indicates direction of messaging. Coordinator and routers will typically have two lines for each connection showing bi-directional message path. Line style is:
-* To end devices : normal line
-* To and between coordinator and routers : heavy line for active routes or thin line for no active routes
-
-To request a networkmap with routes use `zigbee2mqtt/bridge/networkmap/routes` as topic.
+* To **end devices**: normal line
+* To and between **coordinator** and **routers**: heavy line for active routes or thin line for no active routes
 
 ## zigbee2mqtt/bridge/group/[friendly_name]/(add|remove|remove_all)
 See [Groups](groups.md)
@@ -283,9 +286,22 @@ Publishing messages to this topic allows you to control your Zigbee devices via 
   // Specifies the number of seconds the transition to this state takes (0 by default).
   "transition": 3,
 
-  // Instead of setting a brightness by value, you can also move it and stop it after a certain time
-  "brightness_move": -40, // Starts moving the brightness down at 40 units per second
-  "brightness_move": "stop", // Stops the brightness move
+  // Instead of setting a brightness, color_temp, hue or saturation it is also possible to:
+  // - move: this will automatically move the value over time, to stop send value "stop" or "0".
+  // - step: this will increment/decrement the current value by the given one.
+  // The direction of move and step can be either up or down, provide a negative value to move/step down, a positive value to move/step up.
+  // NOTE: brightness move/step will stop at the minimum brightness and won't turn on the light when it's off. In this case use "brightness_move_onoff"/"brightness_step_onoff"
+  // Examples:
+  "brightness_move": -40, // Starts moving brightness down at 40 units per second
+  "brightness_move": 0, // Stop moving brightness
+  "brightness_step": 40 // Increases brightness by 40
+  "color_temp_move": 60, // Starts moving color temperature up at 60 units per second
+  "color_temp_move": "stop", // Stop moving color temperature
+  "color_temp_step": 99, // Increase color temperature by 99
+  "hue_move": 40, // Starts moving hue up at 40 units per second, will endlessly loop (allowed value range: -255 till 255)
+  "hue_step": -90, // Decrease hue by 90 (allowed value range: -255 till 255)
+  "saturation_move": -55, // Starts moving saturation down at -55 units per second (allowed value range: -255 till 255)
+  "saturation_step": 66, // Increase saturation by 66 (allowed value range: -255 till 255)
 }
 ```
 
@@ -314,4 +330,4 @@ This is the counterpart of the `set` command. It allows you to read a value from
 Only used when `homeassistant: true` in `configuration.yaml`. Required for [Home Assistant MQTT discovery](https://www.home-assistant.io/docs/mqtt/discovery/).
 
 ## Device specific commands
-Some devices offer device specific commands. Example: for the Xiaomi DJT11LM Aqara vibration sensor you can set the `sensitivity`. To find out wether your device supports any specific commands, checkout the device page (which can be reached via the supported devices page).
+Some devices offer device specific commands. Example: for the Xiaomi DJT11LM Aqara vibration sensor you can set the `sensitivity`. To find out whether your device supports any specific commands, checkout the device page (which can be reached via the supported devices page).
